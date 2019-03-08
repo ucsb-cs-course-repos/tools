@@ -80,6 +80,32 @@ def days_without_holidays(days_of_week, holiday_list):
 
     return sanitized_dates
 
+
+def find_first_lect_datetime(start_datetime, days_of_week):
+    """
+    In the case where start_datetime is not the first lecture date, this
+    function returns the first lecture's date
+    """
+    first_day = days_of_week[0]
+    dayNum = 0
+    if first_day == "M":
+        dayNum = 0
+    if first_day == "T":
+        dayNum = 1
+    if first_day == "W":
+        dayNum = 2
+    if first_day == "R":
+        dayNum = 3
+    if first_day == "F":
+        dayNum = 4
+
+    first_lect = start_datetime
+    while first_lect.weekday() != dayNum:
+        first_lect = n_days_ahead(first_lect, 1)
+
+    return first_lect
+
+
 def make_date_list(start_date, weeks, days_of_week, holiday_list):
     """
     return list of date strings in yyyy-mm-dd format
@@ -94,10 +120,11 @@ def make_date_list(start_date, weeks, days_of_week, holiday_list):
     validate_days_of_week(days_of_week)
     #start_datetime = validate_date(parse(start_date))
     start_datetime = parse(start_date)
+    first_lect_datetime = find_first_lect_datetime(start_datetime, days_of_week)
 
     final_datetimes = []
     for i in range(weeks):
-        start_of_week_datetime = add_weeks(start_datetime,i)
+        start_of_week_datetime = add_weeks(first_lect_datetime,i)
         days_this_week_unsanitized = days_for_this_week(start_of_week_datetime)
         days_this_week_sanitized = days_without_holidays(days_this_week_unsanitized, holiday_list)
         final_datetimes.append(days_this_week_sanitized)
@@ -111,5 +138,5 @@ def lecture_gen():
 
 if __name__=="__main__":
     #lecture_gen()
-    valid_dates = make_date_list("2019-04-01",2,"MW",["2019-04-08","2019-04-09"])
+    valid_dates = make_date_list("2019-03-31",2,"MW",["2019-04-08","2019-04-09"])
     print(valid_dates)
