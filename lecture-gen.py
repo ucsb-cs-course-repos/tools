@@ -1,11 +1,11 @@
 #!/usr/bin/env python
 
-
 import argparse
 import pytest
 import datetime
 import dateutil
 from dateutil.parser import *
+import os
 
 legal_days_of_week="MTWRF"
 
@@ -138,13 +138,28 @@ def make_date_list(start_date, weeks, days_of_week, holiday_list):
     return final_datetimes
 
 
-def lecture_gen():
-    #todo make directory with correctly dated lecture file stubs
-   pass
+def lecture_gen(path, start_date, weeks, days_of_week, holiday_list):
+    """
+    Creates a _lectures directory in the given path with premade lecture stubs
+    according to the other fields: start date, number of weeks, days of the week
+    that the lecture is on, and a list of holidays that lectures can not be held
+    on.
+    """
+
+    lecture_path = path + "/_lectures"
+    try:
+        os.mkdir(lecture_path)
+    except OSError:
+        print ("Creation of the directory %s failed" % lecture_path)
+    else:
+        print ("Successfully created the directory %s" % lecture_path)
+
 
 
 if __name__=="__main__":
-    #lecture_gen()
+    lecture_gen(os.getcwd(), "2019-03-31",2,"MW",["2019-04-08","2019-04-09"])
+
+    """
     print("valid dates 1")
     valid_dates = make_date_list("2019-03-31",2,"MW",["2019-04-08","2019-04-09"])
     print(valid_dates)
@@ -154,3 +169,4 @@ if __name__=="__main__":
     print("valid dates 3")
     valid_dates3 = make_date_list("2019-03-31",2,"TWR",["2019-04-08","2019-04-09"])
     print(valid_dates3)
+    """
