@@ -49,18 +49,21 @@ def n_days_ahead(start_datetime, days):
     delta = datetime.timedelta(days = days)
     return start_datetime + delta
 
-def days_for_this_week(start_datetime):
+def days_for_this_week(start_datetime, dates):
     """
-    Return a tuple of two datetimes, one for each lecture day
-    start_datetime is the first lecture day of the week, the second
-    is calculated by start_datetime + 2 days days_ahead
+    Return a tuple of len(dates) datetimes, one for each lecture day
+    start_datetime is the first lecture day of the week, the rest
+    are calculated by addings days forward according to dates
 
     Warning: Does not account for holidays (see days_without_holidays)
     """
+    days_this_week = []
 
-    day_one = start_datetime
-    day_two = n_days_ahead(start_datetime, 2)
-    return (day_one, day_two)
+    for d in dates:
+        day_num = day_to_num(d) + 1 #Plus 1 so Monday is offset 1 from Sunday
+        days_this_week.append(n_days_ahead(start_datetime, day_num))
+
+    return days_this_week
 
 def days_without_holidays(days_of_week, holiday_list):
     """
@@ -73,31 +76,36 @@ def days_without_holidays(days_of_week, holiday_list):
 
 
     sanitized_dates = []
-    if days_of_week[0] not in sanitized_holidays:
-        sanitized_dates.append(days_of_week[0])
-    if days_of_week[1] not in sanitized_holidays:
-        sanitized_dates.append(days_of_week[1])
+    for day in days_of_week:
+        if day not in sanitized_holidays:
+            sanitized_dates.append(day)
 
     return sanitized_dates
+
+def day_to_num(day):
+    if day == "M":
+        return 0
+    elif day == "T":
+        return 1
+    elif day == "W":
+        return 2
+    elif day == "R":
+        return 3
+    elif day == "F":
+        return 4
+    else:
+        raise ValueError("day_to_num should contain only chars from" +
+                         legal_days_of_week)
 
 
 def find_first_lect_datetime(start_datetime, days_of_week):
     """
+    Note: No longer using this function
     In the case where start_datetime is not the first lecture date, this
     function returns the first lecture's date
     """
     first_day = days_of_week[0]
-    dayNum = 0
-    if first_day == "M":
-        dayNum = 0
-    if first_day == "T":
-        dayNum = 1
-    if first_day == "W":
-        dayNum = 2
-    if first_day == "R":
-        dayNum = 3
-    if first_day == "F":
-        dayNum = 4
+    dayNum = day_to_num(first_day)
 
     first_lect = start_datetime
     while first_lect.weekday() != dayNum:
@@ -118,14 +126,12 @@ def make_date_list(start_date, weeks, days_of_week, holiday_list):
     """
 
     validate_days_of_week(days_of_week)
-    #start_datetime = validate_date(parse(start_date))
     start_datetime = parse(start_date)
-    first_lect_datetime = find_first_lect_datetime(start_datetime, days_of_week)
 
     final_datetimes = []
     for i in range(weeks):
-        start_of_week_datetime = add_weeks(first_lect_datetime,i)
-        days_this_week_unsanitized = days_for_this_week(start_of_week_datetime)
+        start_of_week_datetime = add_weeks(start_datetime,i)
+        days_this_week_unsanitized = days_for_this_week(start_of_week_datetime, days_of_week)
         days_this_week_sanitized = days_without_holidays(days_this_week_unsanitized, holiday_list)
         final_datetimes.append(days_this_week_sanitized)
 
@@ -133,10 +139,18 @@ def make_date_list(start_date, weeks, days_of_week, holiday_list):
 
 
 def lecture_gen():
+    #todo make directory with correctly dated lecture file stubs
    pass
 
 
 if __name__=="__main__":
     #lecture_gen()
+    print("valid dates 1")
     valid_dates = make_date_list("2019-03-31",2,"MW",["2019-04-08","2019-04-09"])
     print(valid_dates)
+    print("valid dates 2")
+    valid_dates2 = make_date_list("2019-03-31",2,"MWF",["2019-04-08","2019-04-09"])
+    print(valid_dates2)
+    print("valid dates 3")
+    valid_dates3 = make_date_list("2019-03-31",2,"TWR",["2019-04-08","2019-04-09"])
+    print(valid_dates3)
