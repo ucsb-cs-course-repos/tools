@@ -163,7 +163,13 @@ def lecture_gen(path, start_date, weeks, days_of_week, holiday_list):
             lecture_num += 1 #first lecture num will be 1
             filename = "lecture" + str(lecture_num)
             f = open(os.path.join(directory_path, filename), "w+")
-            f.write(str(date))
+            f.write("---\n")
+            f.write("num: " + '"lect' + str(lecture_num) + '"\n')
+            f.write("lecture_date: " + str(date.date()) + "\n")
+            f.write("desc: " + '\n')
+            f.write("ready: " + "false\n")
+            f.write("pdfurl: " + "\n")
+            f.write("---\n")
             f.close()
 
 if __name__=="__main__":
