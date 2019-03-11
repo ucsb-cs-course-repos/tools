@@ -145,16 +145,26 @@ def lecture_gen(path, start_date, weeks, days_of_week, holiday_list):
     that the lecture is on, and a list of holidays that lectures can not be held
     on.
     """
-
-    lecture_path = path + "/_lectures"
+    #Create path:
+    directory_path = os.path.join(path, "_lectures")
     try:
-        os.mkdir(lecture_path)
+        os.mkdir(directory_path)
     except OSError:
-        print ("Creation of the directory %s failed" % lecture_path)
+        print ("Creation of the directory %s failed" % directory_path)
+        return
     else:
-        print ("Successfully created the directory %s" % lecture_path)
+        print ("Successfully created the directory %s" % directory_path)
 
-
+    #create valid dates listing:
+    valid_dates = make_date_list(start_date, weeks, days_of_week, holiday_list)
+    lecture_num = 0
+    for dates_by_week in valid_dates:
+        for date in dates_by_week:
+            lecture_num += 1 #first lecture num will be 1
+            filename = "lecture" + str(lecture_num)
+            f = open(os.path.join(directory_path, filename), "w+")
+            f.write(str(date))
+            f.close()
 
 if __name__=="__main__":
     lecture_gen(os.getcwd(), "2019-03-31",2,"MW",["2019-04-08","2019-04-09"])
