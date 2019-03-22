@@ -151,10 +151,10 @@ def lecture_gen(path, start_date, weeks, days_of_week, holiday_list):
         os.makedirs(directory_path)
     except FileExistsError:
         print ("directory already exists error: Creation of the directory %s failed" % directory_path)
-        return
+        raise
     except OSError:
         print ("OS error: Creation of the directory %s failed" % directory_path)
-        return
+        raise
     else:
         print ("Successfully created the directory %s" % directory_path)
 
@@ -176,7 +176,7 @@ def lecture_gen(path, start_date, weeks, days_of_week, holiday_list):
             f.close()
 
 if __name__=="__main__":
-    lecture_gen(os.getcwd(), "2019-03-31",2,"MW",["2019-04-08","2019-04-09"])
+    lecture_gen(path = os.getcwd(), start_date = "2019-03-31", weeks = 2, days_of_week = "MW",holiday_list = ["2019-04-08","2019-04-09"])
 
     """
     print("valid dates 1")
