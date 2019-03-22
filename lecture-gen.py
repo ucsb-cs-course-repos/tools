@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import argparse
-import pytest
+#import pytest
 import datetime
 import dateutil
 from dateutil.parser import *
@@ -148,9 +148,12 @@ def lecture_gen(path, start_date, weeks, days_of_week, holiday_list):
     #Create path:
     directory_path = os.path.join(path, "_lectures")
     try:
-        os.mkdir(directory_path)
+        os.makedirs(directory_path)
+    except FileExistsError:
+        print ("directory already exists error: Creation of the directory %s failed" % directory_path)
+        return
     except OSError:
-        print ("Creation of the directory %s failed" % directory_path)
+        print ("OS error: Creation of the directory %s failed" % directory_path)
         return
     else:
         print ("Successfully created the directory %s" % directory_path)
