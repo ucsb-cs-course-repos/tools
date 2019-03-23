@@ -7,19 +7,7 @@ import dateutil
 from dateutil.parser import *
 import os
 
-#Config variables--set for each instance of a class
-PATH = os.getcwd()                          #path of where to create the _lectures directory
-                                            #set to os.getcwd() to create it in same directory as program is run
-START_DATE = "2019-03-31"                   #class start date - Must be a Sunday
-NUM_OF_WEEKS = 10                            #number of weeks of class
-DAYS_OF_WEEK = "MW"                         #ex) "MW" or "MWF" or "TWR"
-HOLIDAY_LIST = ["2019-04-08","2019-04-09"]  #list of holidays as array
-OUTPUT_DIR_NAME = "_lectures"               #name of directory of lecture stubs to create
-BASE_LECTURE_NAME = "lec"               #base name of each lecture (ex can change to "lec")
-#end Config variables
-
-
-legal_days_of_week="MTWRF"  #not a config variable, don't change
+legal_days_of_week="MTWRF"
 
 def validate_days_of_week(days_of_week):
     for c in days_of_week:
@@ -110,20 +98,6 @@ def day_to_num(day):
                          legal_days_of_week)
 
 
-def find_first_lect_datetime(start_datetime, days_of_week):
-    """
-    Note: No longer using this function
-    In the case where start_datetime is not the first lecture date, this
-    function returns the first lecture's date
-    """
-    first_day = days_of_week[0]
-    dayNum = day_to_num(first_day)
-
-    first_lect = start_datetime
-    while first_lect.weekday() != dayNum:
-        first_lect = n_days_ahead(first_lect, 1)
-
-    return first_lect
 
 
 def make_date_list(start_date, weeks, days_of_week, holiday_list):
@@ -150,15 +124,18 @@ def make_date_list(start_date, weeks, days_of_week, holiday_list):
     return final_datetimes
 
 
-def lecture_gen(path, start_date, weeks, days_of_week, holiday_list):
+def hwk_gen(path, start_date, weeks, assign_day_of_week, days_till_due, holiday_list):
     """
-    Creates a _lectures directory in the given path with premade lecture stubs
-    according to the other fields: start date, number of weeks, days of the week
-    that the lecture is on, and a list of holidays that lectures can not be held
-    on.
+    Creates a _hwk directory in the given path with premade hwk stubs
+    according to the other fields:
+    start date: Must be a Sunday, day that the quarter or semester starts
+    weeks: number of weeks that the class goes for (ex 10 for quarter)
+    assign day of week: day of week that homework is assigned on
+    days till due: number of days ahead that each hw is due (number of days students get to work on it)
+    list of holidays: days that homeworks can't be assigned on
     """
     #Create path:
-    directory_path = os.path.join(path, OUTPUT_DIR_NAME)
+    directory_path = os.path.join(path, "_hwk")
     try:
         os.makedirs(directory_path)
     except FileExistsError:
@@ -176,19 +153,10 @@ def lecture_gen(path, start_date, weeks, days_of_week, holiday_list):
     for dates_by_week in valid_dates:
         for date in dates_by_week:
             lecture_num += 1 #first lecture num will be 1
-
-            #zero pad the lecture name ex lec01 instead of lec1
-            lect_num_suffix = ""
-            if(lecture_num < 10):
-                lect_num_suffix += str(0) + str(lecture_num)
-            else:
-                lect_num_suffix += str(lecture_num)
-            filename = BASE_LECTURE_NAME + lect_num_suffix + ".md"
-
-
+            filename = "lecture" + str(lecture_num)
             f = open(os.path.join(directory_path, filename), "w+")
             f.write("---\n")
-            f.write("num: " + '"lect' + str(lect_num_suffix) + '"\n')
+            f.write("num: " + '"lect' + str(lecture_num) + '"\n')
             f.write("lecture_date: " + str(date.date()) + "\n")
             f.write("desc: " + '\n')
             f.write("ready: " + "false\n")
@@ -197,16 +165,4 @@ def lecture_gen(path, start_date, weeks, days_of_week, holiday_list):
             f.close()
 
 if __name__=="__main__":
-    lecture_gen(path = PATH, start_date = START_DATE, weeks = NUM_OF_WEEKS, days_of_week = DAYS_OF_WEEK, holiday_list = HOLIDAY_LIST)
-
-    """
-    print("valid dates 1")
-    valid_dates = make_date_list("2019-03-31",2,"MW",["2019-04-08","2019-04-09"])
-    print(valid_dates)
-    print("valid dates 2")
-    valid_dates2 = make_date_list("2019-03-31",2,"MWF",["2019-04-08","2019-04-09"])
-    print(valid_dates2)
-    print("valid dates 3")
-    valid_dates3 = make_date_list("2019-03-31",2,"TWR",["2019-04-08","2019-04-09"])
-    print(valid_dates3)
-    """
+    hwk_gen(path = os.getcwd(), start_date = "2019-03-31", weeks = 2, days_of_week = "MW",holiday_list = ["2019-04-08","2019-04-09"])
