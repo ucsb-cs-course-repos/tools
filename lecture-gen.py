@@ -1,13 +1,27 @@
 #!/usr/bin/env python
 
 import argparse
-import pytest
+#import pytest
 import datetime
 import dateutil
 from dateutil.parser import *
 import os
 
-legal_days_of_week="MTWRF"
+#Config variables--set for each instance of a class
+PATH = os.getcwd()                          #path of where to create the _lectures directory
+                                            #set to os.getcwd() to create it in same directory as program is run
+START_DATE = "2019-03-31"                   #class start date - Must be a Sunday
+NUM_OF_WEEKS = 10                            #number of weeks of class
+DAYS_OF_WEEK = "MW"                         #ex) "MW" or "MWF" or "TWR"
+HOLIDAY_LIST = ["2019-04-08","2019-04-09", "2019-05-13"]  #list of holidays as array
+OUTPUT_DIR_NAME = "_lectures"               #name of directory of lecture stubs to create
+BASE_FILE_NAME = "lec"               #base name of each file stub (either lecture or hwk) (ex can change to "lec" or "hwk")
+INCLUDE_PDF_URL = True                  #whether or not to include "pdf_url: " as a variable stub
+                                        #in each outputed stub
+#end Config variables
+
+
+legal_days_of_week="MTWRF"  #not a config variable, don't change
 
 def validate_days_of_week(days_of_week):
     for c in days_of_week:
@@ -140,18 +154,21 @@ def make_date_list(start_date, weeks, days_of_week, holiday_list):
 
 def lecture_gen(path, start_date, weeks, days_of_week, holiday_list):
     """
-    Creates a _lectures directory in the given path with premade lecture stubs
+    Creates a directory (by the name of OUTPUT_DIR_NAME set at top of program) in the given path with premade lecture stubs
     according to the other fields: start date, number of weeks, days of the week
-    that the lecture is on, and a list of holidays that lectures can not be held
+    that the lecture (or hwk) is on, and a list of holidays that lectures can not be held
     on.
     """
     #Create path:
-    directory_path = os.path.join(path, "_lectures")
+    directory_path = os.path.join(path, OUTPUT_DIR_NAME)
     try:
-        os.mkdir(directory_path)
+        os.makedirs(directory_path)
+    except FileExistsError:
+        print ("directory already exists error: Creation of the directory %s failed" % directory_path)
+        raise
     except OSError:
-        print ("Creation of the directory %s failed" % directory_path)
-        return
+        print ("OS error: Creation of the directory %s failed" % directory_path)
+        raise
     else:
         print ("Successfully created the directory %s" % directory_path)
 
@@ -161,19 +178,29 @@ def lecture_gen(path, start_date, weeks, days_of_week, holiday_list):
     for dates_by_week in valid_dates:
         for date in dates_by_week:
             lecture_num += 1 #first lecture num will be 1
-            filename = "lecture" + str(lecture_num)
+
+            #zero pad the lecture name ex lec01 instead of lec1
+            lect_num_suffix = ""
+            if(lecture_num < 10):
+                lect_num_suffix += str(0) + str(lecture_num)
+            else:
+                lect_num_suffix += str(lecture_num)
+            filename = BASE_FILE_NAME + lect_num_suffix + ".md"
+
+
             f = open(os.path.join(directory_path, filename), "w+")
             f.write("---\n")
-            f.write("num: " + '"lect' + str(lecture_num) + '"\n')
+            f.write("num: " + '"lect' + str(lect_num_suffix) + '"\n')
             f.write("lecture_date: " + str(date.date()) + "\n")
-            f.write("desc: " + '\n')
+            f.write("desc:" + '\n')
             f.write("ready: " + "false\n")
-            f.write("pdfurl: " + "\n")
+            if INCLUDE_PDF_URL:
+                f.write("pdfurl:" + "\n")
             f.write("---\n")
             f.close()
 
 if __name__=="__main__":
-    lecture_gen(os.getcwd(), "2019-03-31",2,"MW",["2019-04-08","2019-04-09"])
+    lecture_gen(path = PATH, start_date = START_DATE, weeks = NUM_OF_WEEKS, days_of_week = DAYS_OF_WEEK, holiday_list = HOLIDAY_LIST)
 
     """
     print("valid dates 1")
