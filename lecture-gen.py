@@ -15,7 +15,9 @@ NUM_OF_WEEKS = 10                            #number of weeks of class
 DAYS_OF_WEEK = "MW"                         #ex) "MW" or "MWF" or "TWR"
 HOLIDAY_LIST = ["2019-04-08","2019-04-09"]  #list of holidays as array
 OUTPUT_DIR_NAME = "_lectures"               #name of directory of lecture stubs to create
-BASE_LECTURE_NAME = "lec"               #base name of each lecture (ex can change to "lec")
+BASE_FILE_NAME = "lec"               #base name of each file stub (either lecture or hwk) (ex can change to "lec" or "hwk")
+INCLUDE_PDF_URL = True                  #whether or not to include "pdf_url: " as a variable stub
+                                        #in each outputed stub
 #end Config variables
 
 
@@ -152,9 +154,9 @@ def make_date_list(start_date, weeks, days_of_week, holiday_list):
 
 def lecture_gen(path, start_date, weeks, days_of_week, holiday_list):
     """
-    Creates a _lectures directory in the given path with premade lecture stubs
+    Creates a directory (by the name of OUTPUT_DIR_NAME set at top of program) in the given path with premade lecture stubs
     according to the other fields: start date, number of weeks, days of the week
-    that the lecture is on, and a list of holidays that lectures can not be held
+    that the lecture (or hwk) is on, and a list of holidays that lectures can not be held
     on.
     """
     #Create path:
@@ -183,7 +185,7 @@ def lecture_gen(path, start_date, weeks, days_of_week, holiday_list):
                 lect_num_suffix += str(0) + str(lecture_num)
             else:
                 lect_num_suffix += str(lecture_num)
-            filename = BASE_LECTURE_NAME + lect_num_suffix + ".md"
+            filename = BASE_FILE_NAME + lect_num_suffix + ".md"
 
 
             f = open(os.path.join(directory_path, filename), "w+")
@@ -192,7 +194,8 @@ def lecture_gen(path, start_date, weeks, days_of_week, holiday_list):
             f.write("lecture_date: " + str(date.date()) + "\n")
             f.write("desc: " + '\n')
             f.write("ready: " + "false\n")
-            f.write("pdfurl: " + "\n")
+            if INCLUDE_PDF_URL:
+                f.write("pdfurl: " + "\n")
             f.write("---\n")
             f.close()
 
