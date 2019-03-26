@@ -13,7 +13,7 @@ PATH = os.getcwd()                          #path of where to create the _lectur
 START_DATE = "2019-03-31"                   #class start date - Must be a Sunday
 NUM_OF_WEEKS = 10                            #number of weeks of class
 DAYS_OF_WEEK = "MW"                         #ex) "MW" or "MWF" or "TWR"
-HOLIDAY_LIST = ["2019-04-08","2019-04-09"]  #list of holidays as array
+HOLIDAY_LIST = ["2019-04-08","2019-04-09", "2019-05-13"]  #list of holidays as array
 OUTPUT_DIR_NAME = "_lectures"               #name of directory of lecture stubs to create
 BASE_FILE_NAME = "lec"               #base name of each file stub (either lecture or hwk) (ex can change to "lec" or "hwk")
 INCLUDE_PDF_URL = True                  #whether or not to include "pdf_url: " as a variable stub
@@ -192,10 +192,10 @@ def lecture_gen(path, start_date, weeks, days_of_week, holiday_list):
             f.write("---\n")
             f.write("num: " + '"lect' + str(lect_num_suffix) + '"\n')
             f.write("lecture_date: " + str(date.date()) + "\n")
-            f.write("desc: " + '\n')
+            f.write("desc:" + '\n')
             f.write("ready: " + "false\n")
             if INCLUDE_PDF_URL:
-                f.write("pdfurl: " + "\n")
+                f.write("pdfurl:" + "\n")
             f.write("---\n")
             f.close()
 
