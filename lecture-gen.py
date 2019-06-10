@@ -9,6 +9,30 @@ import os
 
 legal_days_of_week="MTWRF"
 
+
+def mkdir_p(newdir):
+    """works the way a good mkdir should :)
+        - already exists, silently complete
+        - regular file in the way, raise an exception
+        - parent directory(ies) does not exist, make them as well
+
+       Source: http://code.activestate.com/recipes/82465-a-friendly-mkdir/
+       Note: os.makedirs() already makes all directories in the path but 
+        raises an exception if directory already exists.
+    """
+    if os.path.isdir(newdir):
+        pass
+    elif os.path.isfile(newdir):
+        raise OSError("a file with the same name as the desired " \
+                      "dir, '%s', already exists." % newdir)
+    else:
+        head, tail = os.path.split(newdir)
+        if head and not os.path.isdir(head):
+            mkdir_p(head)
+        #print "_mkdir %s" % repr(newdir)
+        if tail:
+            os.mkdir(newdir)
+
 def validate_days_of_week(days_of_week):
     for c in days_of_week:
         if c not in legal_days_of_week:
@@ -148,7 +172,7 @@ def lecture_gen(path, start_date, weeks, days_of_week, holiday_list):
     #Create path:
     directory_path = os.path.join(path, "_lectures")
     try:
-        os.mkdir(directory_path)
+        mkdir_p(directory_path)
     except OSError:
         print ("Creation of the directory %s failed" % directory_path)
         return
