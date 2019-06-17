@@ -16,16 +16,26 @@ def day_to_index(day):
         raise ValueError("legal values for day are "+legal_days_of_week)
     return legal_days_of_week.index(day)
 
-def sunday_before(date_yyyy_mm_dd):
+def yyyy_mm_dd(date):
+    return date.strftime("%Y-%m-%d")
+
+def sunday_before(date):
     """
-    given a date in "yyyy-mm-dd" format, if that date is
+    given a date in either datetime.date, datetime.datetime
+     or string "yyyy-mm-dd" format, 
+    if that date is
     a sunday, return back that date string. Otherwise, return
     the Sunday immediately prior
     """
 
-    date = dateutil.parser.parse(date_yyyy_mm_dd)
+    if type(date)==str:
+      date = dateutil.parser.parse(date)
+    if type(date) == datetime.date:
+      date = datetime.datetime.combine(date, datetime.time(0,0))
+    if type(date)!=datetime.datetime:
+      raise ValueError("illegal date passed to sunday_before")
     newdate = date - relativedelta.relativedelta(weekday=relativedelta.SU(-1))
-    return newdate.strftime("%Y-%m-%d")
+    return newdate
 
 def load_yaml_file(filename):
     print("Parsing",filename)
@@ -61,12 +71,26 @@ def test_sunday_before_bad_date_raises_value_error():
     
 def test_sunday_before_bad_date_raises_value_error():
     with pytest.raises(ValueError):
-       sunday_before("bad_date")
+       sunday_before(12)
 
 def test_sunday_before_is_fixed_point_if_already_Sunday():
-    assert sunday_before("2019-06-16")=="2019-06-16"
+    assert yyyy_mm_dd(sunday_before("2019-06-16"))=="2019-06-16"
 
 def test_sunday_before_is_fixed_point_if_not_already_Sunday():
-    assert sunday_before("2019-06-17")=="2019-06-16"
+    assert yyyy_mm_dd(sunday_before("2019-06-17"))=="2019-06-16"
+
+def test_sunday_before_works_on_datetime_datetime_values():
+    arg = dateutil.parser.parse("2019-06-17")
+    assert type(arg) == datetime.datetime
+    result = sunday_before(arg)
+    assert yyyy_mm_dd(result)=="2019-06-16"
+
+def test_sunday_before_works_on_datetime_date_values():
+    arg = datetime.date(2019, 6, 18)
+    assert type(arg) == datetime.date
+    result = sunday_before(arg)
+    assert yyyy_mm_dd(result)=="2019-06-16"
+
+
 
     
