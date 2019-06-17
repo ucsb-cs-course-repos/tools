@@ -37,18 +37,35 @@ def sunday_before(date):
     newdate = date - relativedelta.relativedelta(weekday=relativedelta.SU(-1))
     return newdate
 
-def load_yaml_file(filename):
-    print("Parsing",filename)
-    with open(filename, 'r') as stream:
-      try:
+def load_yaml_stream(stream):
+    try:
         return yaml.safe_load(stream)
-      except yaml.YAMLError as exc:
+    except yaml.YAMLError as exc:
         print(exc)
         raise exc
-
+    
 if __name__=="__main__":
-   result = load_yaml_file(sys.argv[1])           
-   print(result)
+
+   parser = argparse.ArgumentParser(
+       
+       description='''
+       Given a start date, number of weeks, and list of holidays,
+       either as command line arguments, or provided in a _config.yml
+       file, produces a _lecture directory suitable for use with Jekyll.
+
+       If there is already a _lecture directory, any file that would have
+       been overwritten will instead be pre-pended with the new content.
+       ''',
+       epilog= '''
+       For more information, see https://ucsb-cs-course-repos.github.io
+       ''')
+
+   parser.add_argument('yaml_file', type=argparse.FileType('r'))
+   args = parser.parse_args()
+   
+   with args.yaml_file as infile:
+       result = load_yaml_stream(infile)
+       print(result)
    
 # TESTS
 
