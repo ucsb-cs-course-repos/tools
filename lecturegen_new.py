@@ -14,7 +14,7 @@ import sys
 
 legal_days_of_week={"M":0,"T":1,"W":2,"R":3,"F":4,"S":5,"U":6}
 
-def convert_days_of_list_string_to_list_of_ints(days_of_week):
+def convert_days_of_week_string_to_list_of_ints(days_of_week):
     global legal_days_of_week
 
     result = []
@@ -71,6 +71,9 @@ def sunday_before(date):
     newdate = date - relativedelta.relativedelta(weekday=relativedelta.SU(-1))
     return newdate
 
+def this_day_is_a_lecture_day(this_day, days_of_week):
+    return ("MTWRFSA"[this_day.weekday()] in days_of_week)
+
 def generate_dates(start_date,num_weeks,days_of_week):
     '''
     start_date may be a str in yyyy-mm-dd form, a datetime.date,
@@ -89,15 +92,16 @@ def generate_dates(start_date,num_weeks,days_of_week):
     start_date = make_datetime_datetime(start_date)
     days_list = convert_days_of_week_string_to_list_of_ints(days_of_week)
 
-    i = 0
+    week = 0
     this_day = start_date
     result = []
-    while i < num_weeks:
-       i+=1
-       
-    return None
-    
-
+    while week < num_weeks:
+       if this_day_is_a_lecture_day(this_day,days_of_week):
+         result.append(this_day)
+       this_day = this_day + datetime.timedelta(days=1)  
+       if this_day.weekday()==0:
+         week += 1
+    return result
 
 def load_yaml_stream(stream):
     try:
@@ -166,6 +170,7 @@ if __name__=="__main__":
    
 # TESTS
 
+
 def test_day_to_index_bad_input_raises_value_error():
     with pytest.raises(ValueError):
         day_to_index("X")
@@ -209,11 +214,24 @@ def test_sunday_before_works_on_datetime_date_values():
 def test_make_datetime_datetime_bad_type():
     with pytest.raises(ValueError):
         make_datetime_datetime(1)
-    
-def test_convert_days_of_list_string_to_list_of_ints_XYZ():
+
+        
+def test_convert_days_of_week_string_to_list_of_ints_XYZ():
     with pytest.raises(ValueError):
-        convert_days_of_list_string_to_list_of_ints("XYZ")
+        convert_days_of_week_string_to_list_of_ints("XYZ")
 
-def test_convert_days_of_list_string_to_list_of_ints_MWF():
-    assert convert_days_of_list_string_to_list_of_ints("MWF")==[0,2,4]
+def test_convert_days_of_week_string_to_list_of_ints_MWF():
+    assert convert_days_of_week_string_to_list_of_ints("MWF")==[0,2,4]
 
+def test_generate_dates_simple():
+    expected = ["2019-06-18", "2019-06-20",
+                "2019-06-25", "2019-06-27"]
+    result = generate_dates("2019-06-18",2,"TR")
+    assert list(map(yyyy_mm_dd,result))==expected
+
+def test_generate_dates_start_on_thursday():
+    expected = ["2018-09-27",
+                "2018-10-02", "2018-10-04",
+                "2018-10-09", "2018-10-11"]
+    result = generate_dates("2018-09-27",3,"TR")
+    assert list(map(yyyy_mm_dd,result))==expected
