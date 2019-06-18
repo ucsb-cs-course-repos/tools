@@ -58,6 +58,25 @@ def make_datetime_datetime(date):
     msg = "Parameter date passed from " + funcName + " at line " + str(codeline) + " in file " + filename + " should be a str in yyyy-mm-dd format, a datetime.date, or a datetime.datetime"
     raise ValueError(msg)
 
+def make_datetime_datetime_list(date_list):
+    '''
+    given a list of dates, each of which may be in any reasonable date format
+    (i.e. str in yyyy-mm-dd format, datetime.date, or datetime.datetime) convert
+    all to datetime.datetime)
+
+    Simply applies make_datetime_datetime to entire list, with nice error handling
+    '''
+
+    stack = traceback.extract_stack()
+    filename, codeline, funcName, text = stack[-2]
+
+    try:
+       return list(map(make_datetime_datetime,date_list))
+    except ValueError:
+       msg = "Parameter date_list passed from " + funcName + " at line " + str(codeline) + " in file " + filename + " should be a list of items in reasonable date format, including only: str in yyyy-mm-dd format, a datetime.date, or a datetime.datetime"
+       raise ValueError(msg) from None
+
+    
 def sunday_before(date):
     """
     given a date in either datetime.date, datetime.datetime
@@ -102,6 +121,11 @@ def generate_dates(start_date,num_weeks,days_of_week):
        if this_day.weekday()==0:
          week += 1
     return result
+
+def dates_without_holidays(datelist, holiday_list):
+    datelist = make_datetime_datetime_list(datelist)
+    holiday_list = make_datetime_datetime_list(holiday_list)
+    return [item for item in datelist if item not in holiday_list]
 
 def load_yaml_stream(stream):
     try:
@@ -234,4 +258,16 @@ def test_generate_dates_start_on_thursday():
                 "2018-10-02", "2018-10-04",
                 "2018-10-09", "2018-10-11"]
     result = generate_dates("2018-09-27",3,"TR")
+    assert list(map(yyyy_mm_dd,result))==expected
+
+def test_dates_without_holidays_1():
+
+    dates = ["2018-09-27",
+                "2018-10-02", "2018-10-04",
+                "2018-10-09", "2018-10-11"]
+    holidays = ["2018-10-02", "2018-10-11"]
+    expected = ["2018-09-27",
+                "2018-10-04",
+                "2018-10-09"]
+    result = dates_without_holidays(dates, holidays)
     assert list(map(yyyy_mm_dd,result))==expected
