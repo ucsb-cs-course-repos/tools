@@ -8,18 +8,55 @@ import pytest
 import datetime
 import dateutil
 import dateutil.parser
+import traceback
 from dateutil import relativedelta
 import sys
 
-legal_days_of_week="UMTWRFS"
+legal_days_of_week={"M":0,"T":1,"W":2,"R":3,"F":4,"S":5,"U":6}
+
+def convert_days_of_list_string_to_list_of_ints(days_of_week):
+    global legal_days_of_week
+
+    result = []
+
+    # this code just makes nicer error messages
+    stack = traceback.extract_stack()
+    filename, codeline, funcName, text = stack[-2]
+    err_msg_prefix = "Parameter days_of_week passed from " + funcName + " at line " + str(codeline) + " in file " + filename + " should be a str"
+    
+    if type(days_of_week)!=str:
+       raise ValueError(err_msg_prefix + " should be of type str")
+
+    for c in days_of_week:
+        if c not in legal_days_of_week:
+          raise ValueError(err_msg_prefix + " contains a char not in MTWRFSU")
+        result.append(legal_days_of_week[c])
+
+    return result
 
 def day_to_index(day):
+    global legal_days_of_week
     if (type(day) != str) or (len(day)!=1) or (day not in legal_days_of_week):
-        raise ValueError("legal values for day are "+legal_days_of_week)
-    return legal_days_of_week.index(day)
+        raise ValueError("legal values for day are MTWRFSU")
+    return legal_days_of_week[day]
 
 def yyyy_mm_dd(date):
     return date.strftime("%Y-%m-%d")
+
+def make_datetime_datetime(date):
+
+    stack = traceback.extract_stack()
+    filename, codeline, funcName, text = stack[-2]
+    
+    if type(date)==str:
+      return dateutil.parser.parse(date)
+    if type(date) == datetime.date:
+      return datetime.datetime.combine(date, datetime.time(0,0))
+    if type(date)==datetime.datetime:
+      return date
+
+    msg = "Parameter date passed from " + funcName + " at line " + str(codeline) + " in file " + filename + " should be a str in yyyy-mm-dd format, a datetime.date, or a datetime.datetime"
+    raise ValueError(msg)
 
 def sunday_before(date):
     """
@@ -30,14 +67,37 @@ def sunday_before(date):
     the Sunday immediately prior
     """
 
-    if type(date)==str:
-      date = dateutil.parser.parse(date)
-    if type(date) == datetime.date:
-      date = datetime.datetime.combine(date, datetime.time(0,0))
-    if type(date)!=datetime.datetime:
-      raise ValueError("illegal date passed to sunday_before")
+    date = make_datetime_datetime(date)
     newdate = date - relativedelta.relativedelta(weekday=relativedelta.SU(-1))
     return newdate
+
+def generate_dates(start_date,num_weeks,days_of_week):
+    '''
+    start_date may be a str in yyyy-mm-dd form, a datetime.date,
+    or a datetime.datetime. It may be any day of the week.
+
+    num_weeks should be an integer 
+
+    days_of_week should be a string that consists only of letters from MTWRFSU,
+    such as TR, TWR, MWF, etc.
+
+    U is Sunday and S is Saturday
+
+    Return value is a list of objects representing dates
+    '''
+
+    start_date = make_datetime_datetime(start_date)
+    days_list = convert_days_of_week_string_to_list_of_ints(days_of_week)
+
+    i = 0
+    this_day = start_date
+    result = []
+    while i < num_weeks:
+       i+=1
+       
+    return None
+    
+
 
 def load_yaml_stream(stream):
     try:
@@ -111,13 +171,13 @@ def test_day_to_index_bad_input_raises_value_error():
         day_to_index("X")
 
 def test_day_to_index_Sunday():
-    assert day_to_index("U")==0
+    assert day_to_index("U")==6
 
 def test_day_to_index_Monday():
-    assert day_to_index("M")==1
+    assert day_to_index("M")==0
 
 def test_day_to_index_Friday():
-    assert day_to_index("F")==5
+    assert day_to_index("F")==4
     
 def test_sunday_before_bad_date_raises_value_error():
     with pytest.raises(ValueError):
@@ -146,5 +206,14 @@ def test_sunday_before_works_on_datetime_date_values():
     assert yyyy_mm_dd(result)=="2019-06-16"
 
 
-
+def test_make_datetime_datetime_bad_type():
+    with pytest.raises(ValueError):
+        make_datetime_datetime(1)
     
+def test_convert_days_of_list_string_to_list_of_ints_XYZ():
+    with pytest.raises(ValueError):
+        convert_days_of_list_string_to_list_of_ints("XYZ")
+
+def test_convert_days_of_list_string_to_list_of_ints_MWF():
+    assert convert_days_of_list_string_to_list_of_ints("MWF")==[0,2,4]
+
