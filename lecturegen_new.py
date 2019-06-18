@@ -42,6 +42,7 @@ def day_to_index(day):
     return legal_days_of_week[day]
 
 def yyyy_mm_dd(date):
+    date = make_datetime_datetime(date)
     return date.strftime("%Y-%m-%d")
 
 def make_datetime_datetime(date):
@@ -168,7 +169,74 @@ def extract_values_from_yaml_dict(yaml_dict):
             raise ValueError("JSON for 'cal_dates'in YAML file has a member with 'holiday:True' but no value for 'date'")
          result['holidays'].append(d['date'])
     return result
-         
+
+def mkdir_p(newdir):
+    """works the way a good mkdir should :)
+        - already exists, silently complete
+        - regular file in the way, raise an exception
+        - parent directory(ies) does not exist, make them as well
+
+       Source: http://code.activestate.com/recipes/82465-a-friendly-mkdir/
+       Note: os.makedirs() already makes all directories in the path but 
+        raises an exception if directory already exists.
+    """
+    if os.path.isdir(newdir):
+        pass
+    elif os.path.isfile(newdir):
+        raise OSError("a file with the same name as the desired " \
+                      "dir, '%s', already exists." % newdir)
+    else:
+        head, tail = os.path.split(newdir)
+        if head and not os.path.isdir(head):
+            mkdir_p(head)
+        #print "_mkdir %s" % repr(newdir)
+        if tail:
+            os.mkdir(newdir)
+
+def create_lectures_directory_if_if_does_not_exist():
+    #Create path:
+    directory_path = os.path.join(path, "_lectures")
+    try:
+        mkdir_p(directory_path)
+    except OSError:
+        print ("Creation of the directory %s failed" % directory_path)
+        return
+    else:
+        print ("Successfully created the directory %s" % directory_path)
+
+            
+def lecture_gen(path, lecture_dates):
+    """
+    Creates a _lectures directory in the given path with premade lecture stubs
+    for the dates given.  Each file is named lectureNN where NN is replaced with
+    01, 02, etc..  If that file already exists, the front matter is prepended to the
+    file, old front matter is commented out, and the rest of the contents are appended.
+    """
+
+    create_lectures_directory_if_it_does_not_exist()
+    lecture_dates = make_datetime_datetime_list(lecture_dates)
+    
+    for i in range(length(lecture_dates)):
+        
+        lecture_num = "lecture{0:02d}".format(i)
+        lecture_file_name = lecture_num + ".md"
+        front_matter = generate_front_matter(lecture_num, lecture_dates[i])
+
+def generate_front_matter(lecture_num, lecture_date):
+
+    lecture_date = yyyy_mm_dd(lecture_date)
+    retval = '''
+---
+num: {0}
+lecture_date: {1}
+desc:
+ready: false
+pdfurl:
+---
+'''.format(lecture_num,lecture_date)
+    print("retval=",retval)
+    return retval
+        
 if __name__=="__main__":
 
    parser = argparse.ArgumentParser(
@@ -196,7 +264,10 @@ if __name__=="__main__":
        yaml_dict = load_yaml_stream(infile)
        result = extract_values_from_yaml_dict(yaml_dict)
        print("result=",result)
-   
+
+
+            
+       
 # TESTS
 
 
@@ -276,3 +347,17 @@ def test_dates_without_holidays_1():
                 "2018-10-09"]
     result = dates_without_holidays(dates, holidays)
     assert list(map(yyyy_mm_dd,result))==expected
+
+def test_generate_front_matter_lecture01_2019_06_19():
+   expected = '''
+---
+num: lecture01
+lecture_date: 2019-06-19
+desc:
+ready: false
+pdfurl:
+---
+'''
+   assert generate_front_matter("lecture01","2019-06-19")==expected
+
+   
