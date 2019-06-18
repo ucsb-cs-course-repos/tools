@@ -11,6 +11,7 @@ import dateutil.parser
 import traceback
 from dateutil import relativedelta
 import sys
+import warnings
 
 legal_days_of_week={"M":0,"T":1,"W":2,"R":3,"F":4,"S":5,"U":6}
 
@@ -184,7 +185,11 @@ if __name__=="__main__":
        For more information, see https://ucsb-cs-course-repos.github.io
        ''')
 
-   parser.add_argument('yaml_file', type=argparse.FileType('r'))
+
+   parser.add_argument('--yaml_file', metavar='yaml_file',
+                       default='_config.yml', type=argparse.FileType('r'),
+                       help='yaml file to process (defaults to _config.yml)')
+                      
    args = parser.parse_args()
    
    with args.yaml_file as infile:
