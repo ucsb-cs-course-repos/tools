@@ -2,6 +2,8 @@
 
 import argparse
 import yaml  # requires pip3 install pyyaml
+import json
+from json import JSONDecodeError
 import pytest
 import datetime
 import dateutil
@@ -43,7 +45,41 @@ def load_yaml_stream(stream):
     except yaml.YAMLError as exc:
         print(exc)
         raise exc
-    
+
+def extract_value(yaml_dict, key, result):
+    if type(result)!=dict:
+        raise ValueError("param result to extract_value should be of type dict")
+    if key not in yaml_dict:
+      raise ValueError("Key '" + key + "' should be in YAML file")
+    result[key]=yaml_dict[key]
+  
+def extract_values_from_yaml_dict(yaml_dict):
+    result = {}
+    keys = ['start_date','num_weeks']
+    for k in keys:
+        extract_value(yaml_dict, k, result)
+
+    # treat cal_dates special, since we have to also extract holidays
+    # from the JSON
+    result['holidays']=[]
+    cal_dates_dict = {}
+    extract_value(yaml_dict, 'cal_dates', cal_dates_dict)
+    cal_dates_json=yaml_dict['cal_dates']
+    try:
+      cal_dates = json.loads(cal_dates_json)
+    except JSONDecodeError:
+      print("json for 'cal_dates' in YAML file is malformed")
+      print("malformed JSON: ",cal_dates_json)
+      raise ValueError("json for 'cal_dates' in YAML file is malformed") from None
+    if type(cal_dates) != list:
+      raise ValueError("Key 'cal_dates' in YAML file should be a list of objects in JSON format")
+    for d in cal_dates:
+      if ('holiday' in d) and (d['holiday']==True):
+         if 'date' not in d:
+            raise ValueError("JSON for 'cal_dates'in YAML file has a member with 'holiday:True' but no value for 'date'")
+         result['holidays'].append(d['date'])
+    return result
+         
 if __name__=="__main__":
 
    parser = argparse.ArgumentParser(
@@ -64,8 +100,9 @@ if __name__=="__main__":
    args = parser.parse_args()
    
    with args.yaml_file as infile:
-       result = load_yaml_stream(infile)
-       print(result)
+       yaml_dict = load_yaml_stream(infile)
+       result = extract_values_from_yaml_dict(yaml_dict)
+       print("result=",result)
    
 # TESTS
 
