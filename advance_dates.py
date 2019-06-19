@@ -8,7 +8,7 @@ import yaml
 import datetime
 import dateutil
 import dateutil.parser
-
+from lecturegen import make_datetime_datetime
 
 def separate_front_matter(list_of_strings):
    
@@ -46,11 +46,19 @@ def advance_dates(contents,delta):
    yaml_doc = yaml.safe_load(yaml_string)
 
    if 'assigned' in yaml_doc:
-      yaml_doc['assigned'] = yaml_doc['assigned'] + datetime.timedelta(days=delta)
-
+      assigned = make_datetime_datetime(yaml_doc['assigned'])
+      assigned = assigned + datetime.timedelta(days=delta)                                       
+      yaml_doc['assigned'] = assigned.strftime("%Y-%m-%d %H:%M")
+   else:
+      print("no assigned in " + str(yaml_doc))
+      
    if 'due' in yaml_doc:
-      yaml_doc['due'] = yaml_doc['due'] + datetime.timedelta(days=delta)
-         
+      due = make_datetime_datetime(yaml_doc['due'])
+      due = due + datetime.timedelta(days=delta)               
+      yaml_doc['due'] = assigned.strftime("%Y-%m-%d %H:%M")                        
+   else:
+      print("no due in " + str(yaml_doc))
+      
    yaml_lines = yaml.dump(yaml_doc).split("\n")
    yaml_lines = list(map(lambda x : x+"\n", yaml_lines))                        
    contents['front_matter']= ["---\n"] + yaml_lines + ["---\n"]
@@ -67,6 +75,11 @@ if __name__=="__main__":
 
        ''',
        epilog= '''
+
+       To calculate delta, enter a string like this into Google Search:
+
+       how many days between 2018-01-23 and 2019-08-06
+
        For more information, see https://ucsb-cs-course-repos.github.io
        ''')
 
