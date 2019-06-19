@@ -12,7 +12,11 @@ import traceback
 from dateutil import relativedelta
 import sys
 import warnings
+import os
+from os import access, R_OK, W_OK
+from os.path import isfile
 
+        
 legal_days_of_week={"M":0,"T":1,"W":2,"R":3,"F":4,"S":5,"U":6}
 
 def convert_days_of_week_string_to_list_of_ints(days_of_week):
@@ -116,7 +120,7 @@ def generate_dates(start_date,num_weeks,days_of_week):
     week = 0
     this_day = start_date
     result = []
-    while week < num_weeks:
+    while week <= num_weeks:
        if this_day_is_a_lecture_day(this_day,days_of_week):
          result.append(this_day)
        this_day = this_day + datetime.timedelta(days=1)  
@@ -145,7 +149,7 @@ def extract_value(yaml_dict, key, result):
   
 def extract_values_from_yaml_dict(yaml_dict):
     result = {}
-    keys = ['start_date','num_weeks']
+    keys = ['start_date','num_weeks','lecture_days_of_week'] # required keys in YAML file
     for k in keys:
         extract_value(yaml_dict, k, result)
 
@@ -193,40 +197,66 @@ def mkdir_p(newdir):
         if tail:
             os.mkdir(newdir)
 
-def create_lectures_directory_if_if_does_not_exist():
-    #Create path:
+def create_lectures_directory_if_it_does_not_exist(path):
+
     directory_path = os.path.join(path, "_lectures")
     try:
         mkdir_p(directory_path)
     except OSError:
         print ("Creation of the directory %s failed" % directory_path)
-        return
+        return None
     else:
         print ("Successfully created the directory %s" % directory_path)
+        return directory_path
 
+def write_lecture_file(num, lectures_path, lecture_date, lect_prefix):
+        
+    lecture_num = ("Lecture {}").format(num)
+    lecture_file_name = os.path.join(lectures_path, (lect_prefix + "{0:02d}").format(num) + ".md")
+    front_matter = generate_front_matter(lecture_num, lecture_date)
+    
+    if isfile(lecture_file_name) and access(lecture_file_name, R_OK) and access(lecture_file_name, W_OK):
+        with open(lecture_file_name,'r') as f:
+            old_contents = f.read()
+            if old_contents.startswith(front_matter):
+                pass
+            else:
+                with open(lecture_file_name,'w') as f:
+                    f.write(front_matter + "\n" + old_contents)
+    elif isfile(lecture_file_name) and not access(lecture_file_name, R_OK):
+        print("WARNING: file {} exists but is not readable; skipped".format(lecture_file_name))
+    elif isfile(lecture_file_name) and not access(lecture_file_name, W_OK):            
+        print("WARNING: file {} exists but is not writable; skipped".format(lecture_file_name))
+    else:
+        try:
+            with open(lecture_file_name, "w") as f:
+                f.write(front_matter)
+            print("Generated: {}".format(lecture_file_name))
+        except:
+            print("WARNING: file {} is not writable; skipped".format(lecture_file_name))                
             
-def lecture_gen(path, lecture_dates):
+    
+def lecture_gen(path, lecture_dates, lect_prefix):
     """
     Creates a _lectures directory in the given path with premade lecture stubs
     for the dates given.  Each file is named lectureNN where NN is replaced with
-    01, 02, etc..  If that file already exists, the front matter is prepended to the
-    file, old front matter is commented out, and the rest of the contents are appended.
+    01, 02, etc.  If that file already exists, if the new front matter is different from 
+    the existing from matter, it is prepended to the file.   Thus, running multiple times
+    should be the same as running once.  If it does not exist, the file is created.
     """
 
-    create_lectures_directory_if_it_does_not_exist()
+    lectures_path = create_lectures_directory_if_it_does_not_exist(path)
     lecture_dates = make_datetime_datetime_list(lecture_dates)
     
-    for i in range(length(lecture_dates)):
+    for i in range(len(lecture_dates)):
+        write_lecture_file(i+1, lectures_path, lecture_dates[i], lect_prefix)
         
-        lecture_num = "lecture{0:02d}".format(i)
-        lecture_file_name = lecture_num + ".md"
-        front_matter = generate_front_matter(lecture_num, lecture_dates[i])
+    print("{} lecture stubs generated in ".format(len(lecture_dates)),lectures_path)
 
 def generate_front_matter(lecture_num, lecture_date):
 
     lecture_date = yyyy_mm_dd(lecture_date)
-    retval = '''
----
+    retval = '''---
 num: {0}
 lecture_date: {1}
 desc:
@@ -234,7 +264,6 @@ ready: false
 pdfurl:
 ---
 '''.format(lecture_num,lecture_date)
-    print("retval=",retval)
     return retval
         
 if __name__=="__main__":
@@ -242,9 +271,10 @@ if __name__=="__main__":
    parser = argparse.ArgumentParser(
        
        description='''
-       Given a start date, number of weeks, and list of holidays,
-       either as command line arguments, or provided in a _config.yml
-       file, produces a _lecture directory suitable for use with Jekyll.
+       Generates the _lectures directory for a Jekyll-based course repo
+
+       Uses the values for start_date, num_weeks, lecture_days_of_week
+       and cal_dates (with "holiday":true) in _config.yml
 
        If there is already a _lecture directory, any file that would have
        been overwritten will instead be pre-pended with the new content.
@@ -257,15 +287,27 @@ if __name__=="__main__":
    parser.add_argument('--yaml_file', metavar='yaml_file',
                        default='_config.yml', type=argparse.FileType('r'),
                        help='yaml file to process (defaults to _config.yml)')
-                      
+
+   parser.add_argument('--dir', metavar='dir',
+                       default=os.getcwd(), 
+                       help='dir in which to create _lectures (defaults to current directory)')
+
+   parser.add_argument('--prefix', metavar='prefix',
+                       default='lect', 
+                       help='prefix of each file, e.g. "lect" for "lect01", "lect02", etc.  defaults to "lect")')
+
+   
    args = parser.parse_args()
    
    with args.yaml_file as infile:
        yaml_dict = load_yaml_stream(infile)
        result = extract_values_from_yaml_dict(yaml_dict)
-       print("result=",result)
 
-
+   dates = generate_dates(result['start_date'],
+                           result['num_weeks'],
+                           result['lecture_days_of_week'])
+   dates = dates_without_holidays(dates, result['holidays'])    
+   lecture_gen(args.dir, dates, args.prefix)   
             
        
 # TESTS
@@ -349,8 +391,7 @@ def test_dates_without_holidays_1():
     assert list(map(yyyy_mm_dd,result))==expected
 
 def test_generate_front_matter_lecture01_2019_06_19():
-   expected = '''
----
+   expected = '''---
 num: lecture01
 lecture_date: 2019-06-19
 desc:

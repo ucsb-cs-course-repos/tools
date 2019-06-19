@@ -1,14 +1,13 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import argparse
 import pytest
 import datetime
 import dateutil
-from dateutil.parser import *
+from dateutil.parser import parse
 import os
 
 legal_days_of_week="MTWRF"
-
 
 def mkdir_p(newdir):
     """works the way a good mkdir should :)
@@ -41,8 +40,7 @@ def validate_days_of_week(days_of_week):
 
 
 def validate_date(date):
-     result = datetime.datetime.utcfromtimestamp(date) # raises ValueError if illegal value
-     #I am getting erros from the above call, using parse, we might not need this function
+     result = dateutil.parser.parse(date)
      return result
 
 def validate_start_date(date):
@@ -145,12 +143,12 @@ def make_date_list(start_date, weeks, days_of_week, holiday_list):
     Example:
 
     TODO shouldn't the 3 below be 2? As this is for 2 weeks?
-     make_date_list("2019-03-31",3,"MW",["2019-04-08","2019-04-09"]) =>
+     make_date_list("2019-03-31",2,"MW",["2019-04-08","2019-04-09"]) =>
        ["2019-04-01","2019-04-03","2019-04-10"]
     """
 
     validate_days_of_week(days_of_week)
-    start_datetime = parse(start_date)
+    start_datetime = validate_start_date(start_date)
 
     final_datetimes = []
     for i in range(weeks):
@@ -197,9 +195,9 @@ def lecture_gen(path, start_date, weeks, days_of_week, holiday_list):
             f.close()
 
 if __name__=="__main__":
-    lecture_gen(os.getcwd(), "2019-03-31",2,"MW",["2019-04-08","2019-04-09"])
 
-    """
+    #lecture_gen(os.getcwd(), "2019-03-31",2,"MW",["2019-04-08","2019-04-09"])
+
     print("valid dates 1")
     valid_dates = make_date_list("2019-03-31",2,"MW",["2019-04-08","2019-04-09"])
     print(valid_dates)
@@ -209,4 +207,4 @@ if __name__=="__main__":
     print("valid dates 3")
     valid_dates3 = make_date_list("2019-03-31",2,"TWR",["2019-04-08","2019-04-09"])
     print(valid_dates3)
-    """
+    
