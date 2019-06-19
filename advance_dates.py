@@ -42,6 +42,7 @@ def write_lines(f,data):
          outfile.write(d)
 
 def advance_dates(contents,delta):
+
    yaml_string = "\n".join(contents['front_matter'][1:-1])
    yaml_doc = yaml.safe_load(yaml_string)
 
@@ -55,7 +56,7 @@ def advance_dates(contents,delta):
    if 'due' in yaml_doc:
       due = make_datetime_datetime(yaml_doc['due'])
       due = due + datetime.timedelta(days=delta)               
-      yaml_doc['due'] = assigned.strftime("%Y-%m-%d %H:%M")                        
+      yaml_doc['due'] = due.strftime("%Y-%m-%d %H:%M")                        
    else:
       print("no due in " + str(yaml_doc))
       
@@ -70,8 +71,10 @@ if __name__=="__main__":
    parser = argparse.ArgumentParser(
        
        description='''
-       Set ready to false in all .md files in --dir argument 
-       (default: current directory)
+       Advance the assigned and due dates in front matter by some delta.
+       Can move dates backwards by using negative delta.
+
+       Affects all .md files in the directory specified.
 
        ''',
        epilog= '''
@@ -86,7 +89,7 @@ if __name__=="__main__":
 
    parser.add_argument('--dir', metavar='dir',
                        default=os.getcwd(), 
-                       help='dir in which to set ready to false (defaults to current directory)')
+                       help='dir in which to advance .md files (defaults to current directory)')
 
    parser.add_argument('--delta', metavar='delta',
                        default=90, type=int,
