@@ -120,11 +120,11 @@ def generate_dates(start_date,num_weeks,days_of_week):
     week = 0
     this_day = start_date
     result = []
-    while week <= num_weeks:
+    while week < num_weeks:
        if this_day_is_a_lecture_day(this_day,days_of_week):
          result.append(this_day)
        this_day = this_day + datetime.timedelta(days=1)  
-       if this_day.weekday()==0:
+       if this_day.weekday()==6:
          week += 1
     return result
 
