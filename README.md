@@ -1,5 +1,20 @@
 # tools
 
+## prerequisites
+
+* Use `pip` or `pip3` to install `python-dateutil`, `pyyaml`
+
+## Testing
+
+```
+python3 -m pytest set_due_time.py
+python3 -m pytest lecture_gen.py
+python3 -m pytest advance_dates.py
+python3 -m pytest set_ready_false.py
+```
+
+## Tools
+
 * `lecturegen.py`: uses the values in the `_config.yml` file to set up the `_lectures` directory.  If you
   already have content in that directory, it will prepend the new front matter to the top of each file,
   so you don't lose any of your content.  It takes into account campus holidays as long as you set
