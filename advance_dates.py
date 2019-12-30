@@ -46,14 +46,14 @@ def advance_dates(contents,delta):
    yaml_string = "\n".join(contents['front_matter'][1:-1])
    yaml_doc = yaml.safe_load(yaml_string)
 
-   if 'assigned' in yaml_doc:
+   if yaml_doc and 'assigned' in yaml_doc:
       assigned = make_datetime_datetime(yaml_doc['assigned'])
       assigned = assigned + datetime.timedelta(days=delta)                                       
       yaml_doc['assigned'] = assigned.strftime("%Y-%m-%d %H:%M")
    else:
       print("no assigned in " + str(yaml_doc))
       
-   if 'due' in yaml_doc:
+   if yaml_doc and 'due' in yaml_doc:
       due = make_datetime_datetime(yaml_doc['due'])
       due = due + datetime.timedelta(days=delta)               
       yaml_doc['due'] = due.strftime("%Y-%m-%d %H:%M")                        
