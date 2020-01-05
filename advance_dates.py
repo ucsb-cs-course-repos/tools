@@ -41,26 +41,26 @@ def write_lines(f,data):
       for d in data:
          outfile.write(d)
 
+def advance_date(yaml_doc, key, delta):
+   new_date = make_datetime_datetime(yaml_doc[key])
+   new_date = new_date + datetime.timedelta(days=delta)
+   yaml_doc[key] = new_date.strftime("%Y-%m-%d %H:%M")
+         
 def advance_dates(contents,delta):
 
    yaml_string = "\n".join(contents['front_matter'][1:-1])
    yaml_doc = yaml.safe_load(yaml_string)
 
+   if yaml_doc and 'lecture_date' in yaml_doc:
+     advance_date(yaml_doc,'lecture_date',delta)
+
    if yaml_doc and 'assigned' in yaml_doc:
-      assigned = make_datetime_datetime(yaml_doc['assigned'])
-      assigned = assigned + datetime.timedelta(days=delta)                                       
-      yaml_doc['assigned'] = assigned.strftime("%Y-%m-%d %H:%M")
-   else:
-      print("no assigned in " + str(yaml_doc))
+     advance_date(yaml_doc,'assigned',delta)
       
    if yaml_doc and 'due' in yaml_doc:
-      due = make_datetime_datetime(yaml_doc['due'])
-      due = due + datetime.timedelta(days=delta)               
-      yaml_doc['due'] = due.strftime("%Y-%m-%d %H:%M")                        
-   else:
-      print("no due in " + str(yaml_doc))
+     advance_date(yaml_doc,'due',delta)        
       
-   yaml_lines = yaml.dump(yaml_doc).split("\n")
+   yaml_lines = yaml.dump(yaml_doc, default_flow_style=False).split("\n")
    yaml_lines = list(map(lambda x : x+"\n", yaml_lines))                        
    contents['front_matter']= ["---\n"] + yaml_lines + ["---\n"]
    return contents
