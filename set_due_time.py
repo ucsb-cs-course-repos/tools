@@ -30,7 +30,7 @@ def set_due_time(contents,new_hour,new_minute):
    else:
       print("no due in " + str(yaml_doc))
       
-   yaml_lines = yaml.dump(yaml_doc).split("\n")
+   yaml_lines = yaml.dump(yaml_doc, default_flow_style=False).split("\n")
    yaml_lines = list(map(lambda x : x+"\n", yaml_lines))                        
    contents['front_matter']= ["---\n"] + yaml_lines + ["---\n"]
    return contents

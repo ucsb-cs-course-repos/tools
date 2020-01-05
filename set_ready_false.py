@@ -40,7 +40,7 @@ def set_ready_to_false(contents):
    yaml_string = "\n".join(contents['front_matter'][1:-1])
    yaml_doc = yaml.safe_load(yaml_string)
    yaml_doc['ready']=False
-   yaml_lines = yaml.dump(yaml_doc).split("\n")
+   yaml_lines = yaml.dump(yaml_doc, default_flow_style=False).split("\n")
    yaml_lines = list(map(lambda x : x+"\n", yaml_lines))                        
    contents['front_matter']= ["---\n"] + yaml_lines + ["---\n"]
    return contents
